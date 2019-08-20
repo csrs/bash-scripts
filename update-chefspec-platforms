@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# change USERNAME to be your github username
+USERNAME=[github username]
+repo="$1"
+clonefolder="$2"
+
+# $1 is repo name, $2 is destination folder
+git clone git@github.com:osuosl-cookbooks/"$repo".git "$clonefolder"
+
+cd "$clonefolder"/
+
+git remote rename origin upstream
+git checkout -b "$USERNAME"/update-chefspec-platforms
+
+cd spec/
+
+# Centos 6 
+sed -i "s/'6\.[0-9]'/'6.9'/g" spec_helper.rb
+
+# Centos 7
+sed -i "s/'7\.[0-9]\.[0-9]\{4\}'/'7.4.1708'/g" spec_helper.rb 
+
+# Debian 8
+sed -i "s/'8\.[0-9]'/'8.10'/g" spec_helper.rb
+
+# Debian 9
+sed -i "s/'9\.[0-9]'/'9.3'/g" spec_helper.rb
+
+cd ..
+rake
+
+if [ $? -eq "0" ]
+then  
+  git add spec/spec_helper.rb
+  git commit -m 'Updated chefspec platforms for "$repo"'
+  git push upstream "$USERNAME"/update-chefspec-platforms
+ else
+  vim spec_helper.rb
+  echo "****** GIT DIFF ******"
+  git diff
+fi
+
+
+echo "****** git diff ******"
+git diff
+
+vim spec_helper.rb
